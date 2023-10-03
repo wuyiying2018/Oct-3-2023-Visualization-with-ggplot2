@@ -373,3 +373,104 @@ tmax_tmin_p + prcp_dens_p
     ## Removed 33 rows containing missing values (`geom_point()`).
 
 <img src="Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-15-2.png" width="90%" />
+
+### Data Manipulation
+
+change the order level of a factor variable using `forcats::fct_relevel`
+or `forcats::fct_reorder`
+
+reorders `name` “by hand”:
+
+``` r
+weather_df |>
+  mutate(name = forcats::fct_relevel(name, c("Molokai_HI", "CentralPark_NY", "Waterhole_WA"))) |> 
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), color = "blue", alpha = .5) + 
+  theme(legend.position = "bottom")
+```
+
+    ## Warning: Removed 33 rows containing non-finite values (`stat_ydensity()`).
+
+<img src="Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-16-1.png" width="90%" />
+
+reorders `name` according to `tmax` values in each name:
+
+``` r
+weather_df |>
+  mutate(name = forcats::fct_reorder(name, tmax)) |> 
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), color = "blue", alpha = .5) + 
+  theme(legend.position = "bottom")
+```
+
+    ## Warning: There was 1 warning in `mutate()`.
+    ## ℹ In argument: `name = forcats::fct_reorder(name, tmax)`.
+    ## Caused by warning:
+    ## ! `fct_reorder()` removing 33 missing values.
+    ## ℹ Use `.na_rm = TRUE` to silence this message.
+    ## ℹ Use `.na_rm = FALSE` to preserve NAs.
+
+    ## Warning: Removed 33 rows containing non-finite values (`stat_ydensity()`).
+
+<img src="Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-17-1.png" width="90%" />
+
+revisit the FAS data. We’ve seen code for data import and organization
+and for joining the litters and pups data. Here we add some data tidying
+steps to view pup-level outcomes (post-natal day on which ears “work”,
+on which the pup can walk, etc) across values of dose category and
+treatment day.
+
+``` r
+pup_data = 
+  read_csv("./data/FAS_pups.csv") |>
+  janitor::clean_names() |>
+  mutate(
+    sex = 
+      case_match(
+        sex, 
+        1 ~ "male", 
+        2 ~ "female"))
+```
+
+    ## Rows: 313 Columns: 6
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): Litter Number
+    ## dbl (5): Sex, PD ears, PD eyes, PD pivot, PD walk
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+litter_data = 
+  read_csv("./data/FAS_litters.csv") |>
+  janitor::clean_names() |>
+  separate(group, into = c("dose", "day_of_tx"), sep = 3)
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Group, Litter Number
+    ## dbl (6): GD0 weight, GD18 weight, GD of Birth, Pups born alive, Pups dead @ ...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+fas_data = left_join(pup_data, litter_data, by = "litter_number") 
+
+fas_data |> 
+  select(sex, dose, day_of_tx, pd_ears:pd_walk) |> 
+  pivot_longer(
+    pd_ears:pd_walk,
+    names_to = "outcome", 
+    values_to = "pn_day") |> 
+  drop_na() |> 
+  mutate(outcome = forcats::fct_reorder(outcome, pn_day, median)) |> 
+  ggplot(aes(x = dose, y = pn_day)) + 
+  geom_violin() + 
+  facet_grid(day_of_tx ~ outcome)
+```
+
+<img src="Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-18-1.png" width="90%" />
