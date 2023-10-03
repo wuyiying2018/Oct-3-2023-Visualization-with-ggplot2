@@ -106,6 +106,27 @@ weather_df |>
     y = "Maxiumum daily temperature (C)",
     color = "Location",
     caption = "Data from the rnoaa package"
+  )
+```
+
+    ## Warning: Removed 33 rows containing missing values (`geom_point()`).
+
+![](Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+## Scales
+
+`scale_x_continuous`, `scale_y_continuous`
+
+``` r
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    color = "Location",
+    caption = "Data from the rnoaa package"
   )+
   scale_x_continuous(
     breaks=c(-15,0,15),
@@ -118,6 +139,237 @@ weather_df |>
 
     ## Warning: Removed 33 rows containing missing values (`geom_point()`).
 
-![](Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-## Scales
+``` r
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    color = "Location",
+    caption = "Data from the rnoaa package") + 
+  scale_x_continuous(
+    breaks = c(-15, 0, 15), 
+    labels = c("-15ºC", "0", "15"),
+    limits = c(-20, 30)) + 
+  scale_y_continuous(
+    trans = "sqrt", 
+    position = "right")
+```
+
+    ## Warning in self$trans$transform(x): NaNs produced
+
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+
+    ## Warning: Removed 199 rows containing missing values (`geom_point()`).
+
+![](Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+Analogously to `scale_x_*` and `scale_y_*`, there are scales
+corresponding to other aesthetics. Some of the most common are used to
+control the color aesthetic. For example, arguments to
+`scale_color_hue()` control the color scale and the name in the plot
+legend.
+
+``` r
+weather_df |> 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    color = "Location",
+    caption = "Data from the rnoaa package") + 
+  scale_color_hue(h = c(100, 300))
+```
+
+    ## Warning: Removed 33 rows containing missing values (`geom_point()`).
+
+![](Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+`viridis` package
+<https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html>
+
+``` r
+ggp_temp_plot = 
+  weather_df |> 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    color = "Location",
+    caption = "Data from the rnoaa package"
+  ) + 
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE
+  )
+
+ggp_temp_plot
+```
+
+    ## Warning: Removed 33 rows containing missing values (`geom_point()`).
+
+![](Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+## Themes
+
+change the legend position.
+
+By default this is on the right of the graphic, but I like to shift it
+to the bottom to ensure the graphic takes up the available left-to-right
+space.
+
+``` r
+ggp_temp_plot + 
+  theme(legend.position = "bottom")
+```
+
+    ## Warning: Removed 33 rows containing missing values (`geom_point()`).
+
+![](Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+Quick tip: `legend.position = "none"` will remove the legend.
+
+While you can manage specific theme elements individually, I recommend
+using a built-in theme. By default this is `theme_gray`; here’s
+`theme_bw()`:
+
+``` r
+ggp_temp_plot + 
+  theme_bw() + 
+  theme(legend.position = "bottom")
+```
+
+    ## Warning: Removed 33 rows containing missing values (`geom_point()`).
+
+![](Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+the Excel 2003 theme from ggthemes
+
+``` r
+ggp_temp_plot + 
+  ggthemes::theme_excel() + 
+  theme(legend.position = "bottom")
+```
+
+    ## Warning: Removed 33 rows containing missing values (`geom_point()`).
+
+![](Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+Don’t use the Excel 2003 theme (the first two are fine, and ggthemes has
+other very nice themes as well).
+
+The ordering of `theme_bw()` and `theme()` matters – `theme()` changes a
+particular element of the plot’s current “theme”. If you call theme to
+change the some element and then theme_bw(), the changes introduced by
+`theme()` are overwritten by `theme_bw()`.
+
+## Setting options
+
+In addition to figure sizing, I include a few other figure preferences
+in global options declared at the outset of each .Rmd file (this code
+chunk just gets copy-and-pasted to the beginning of every new file).
+
+``` r
+library(tidyverse)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+## Data argument in `geom_*`
+
+``` r
+central_park_df = 
+  weather_df |> 
+  filter(name == "CentralPark_NY")
+
+molokai_df = 
+  weather_df |> 
+  filter(name == "Molokai_HI")
+
+ggplot(data = molokai_df, aes(x = date, y = tmax, color = name)) + 
+  geom_point() + 
+  geom_line(data = central_park_df) 
+```
+
+    ## Warning: Removed 6 rows containing missing values (`geom_point()`).
+
+    ## Warning: Removed 5 rows containing missing values (`geom_line()`).
+
+<img src="Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-13-1.png" width="90%" />
+
+### `patchwork`
+
+`facet_grid(.~name)`
+
+``` r
+weather_df|>
+  ggplot(aes(x=date,y=tmax,color=name))+
+  geom_point()+
+  facet_grid(.~name)
+```
+
+    ## Warning: Removed 33 rows containing missing values (`geom_point()`).
+
+<img src="Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-14-1.png" width="90%" />
+
+``` r
+tmax_tmin_p = 
+  weather_df |> 
+  ggplot(aes(x = tmax, y = tmin, color = name)) + 
+  geom_point(alpha = .5) +
+  theme(legend.position = "none")
+
+prcp_dens_p = 
+  weather_df |> 
+  filter(prcp > 0) |> 
+  ggplot(aes(x = prcp, fill = name)) + 
+  geom_density(alpha = .5) + 
+  theme(legend.position = "none")
+
+tmax_date_p = 
+  weather_df |> 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  theme(legend.position = "bottom")
+
+tmax_tmin_p + prcp_dens_p
+```
+
+    ## Warning: Removed 33 rows containing missing values (`geom_point()`).
+
+<img src="Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-15-1.png" width="90%" />
+
+``` r
+(tmax_tmin_p + prcp_dens_p) / tmax_date_p
+```
+
+    ## Warning: Removed 33 rows containing missing values (`geom_point()`).
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 33 rows containing non-finite values (`stat_smooth()`).
+    ## Removed 33 rows containing missing values (`geom_point()`).
+
+<img src="Viz-with-ggplot2_files/figure-gfm/unnamed-chunk-15-2.png" width="90%" />
